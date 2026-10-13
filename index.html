@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estudo de Caso: Rosa Farma</title>
+<style>
+:root{
+  --bg:#071426;
+  --bg-soft:#0C2142;
+  --azul-intenso:#123B91;
+  --azul-vibrante:#1647B8;
+  --verde-neon:#7CFF00;
+  --verde-vib:#38E84F;
+  --ciano:#19D6A3;
+  --branco:#FFFFFF;
+  --cinza:#D9E1EA;
+  --cinza2:#8FA6C0;
+  --card:rgba(18,59,145,0.18);
+  --card-border:rgba(25,214,163,0.18);
+  --font:Arial,Helvetica,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--branco);
+  line-height:1.7;
+  display:flex;
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:var(--azul-intenso);border-radius:10px}
+
+/* Progress top */
+#progressBar{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--verde-neon),var(--ciano));z-index:9999;transition:width .15s}
+
+/* Sidebar */
+#sidebar{
+  width:290px;
+  background:linear-gradient(180deg,#0B1E3D 0%,var(--bg) 90%);
+  border-right:1px solid rgba(255,255,255,0.06);
+  position:fixed;height:100vh;overflow-y:auto;
+  padding:28px 18px;z-index:100;
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+}
+.logo{
+  border:1px dashed rgba(124,255,0,0.35);
+  border-radius:12px;padding:14px;text-align:center;margin-bottom:28px;
+  background:rgba(255,255,255,0.02)
+}
+.logo b{letter-spacing:2px;font-size:14px;display:block}
+.logo b span{color:var(--verde-neon)}
+.logo small{font-size:9px;letter-spacing:1.5px;color:var(--cinza2);text-transform:uppercase}
+
+.nav-menu{list-style:none}
+.nav-link{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:10px;
+  color:var(--cinza2);text-decoration:none;
+  font-size:13px;font-weight:600;cursor:pointer;
+  transition:all .25s;border:1px solid transparent;
+  position:relative;overflow:hidden;
+}
+.nav-link:hover{background:rgba(255,255,255,0.04);color:var(--branco)}
+.nav-link.active{background:rgba(22,71,184,0.22);color:var(--branco);border-color:rgba(25,214,163,0.25)}
+.nav-link.active:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--verde-neon)}
+.nav-link .num{width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.06);display:grid;place-items:center;font-size:10px;color:var(--cinza2)}
+.nav-link.active .num{background:var(--verde-neon);color:var(--bg)}
+.progress-dots{display:flex;gap:6px;margin:10px 0 20px 14px}
+.progress-dots span{width:24px;height:3px;border-radius:10px;background:rgba(255,255,255,0.12);transition:all .4s}
+.progress-dots span.on{background:var(--verde-neon);box-shadow:0 0 8px rgba(124,255,0,0.5)}
+
+/* Main */
+#main-content{margin-left:290px;width:calc(100% - 290px);max-width:1200px;padding:0 0 80px}
+.section-content{display:none;opacity:0;transform:translateY(12px);transition:opacity .45s,transform .45s}
+.section-content.active{display:block;opacity:1;transform:translateY(0);animation:fadeUp .6s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.inner{padding:56px 6%}
+.reveal{opacity:0;transform:translateY(18px);transition:all .7s cubic-bezier(.2,.8,.2,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+
+h1{font-size:42px;line-height:0.95;letter-spacing:-1.2px;font-weight:900;margin-bottom:14px}
+h1 i{font-style:normal;background:linear-gradient(90deg,var(--verde-neon),var(--ciano));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--verde-neon);margin:36px 0 12px;font-weight:800}
+h3{font-size:18px;color:var(--branco);margin-bottom:8px;letter-spacing:-0.2px}
+p{color:var(--cinza);font-size:14.5px;margin-bottom:12px}
+.lead{font-size:17px;color:var(--cinza);max-width:680px;line-height:1.6}
+
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02));
+  border:1px solid var(--card-border);
+  border-radius:16px;padding:22px 22px;
+  margin-bottom:16px;
+  transition:transform .25s,border-color .25s,box-shadow .25s;
+  backdrop-filter:blur(8px);
+}
+.card:hover{transform:translateY(-2px);border-color:rgba(124,255,0,0.28);box-shadow:0 10px 30px rgba(0,0,0,0.25)}
+.card.soft{background:rgba(255,255,255,0.02)}
+.badge{display:inline-flex;padding:4px 9px;border-radius:999px;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:800}
+.badge-lime{background:var(--verde-neon);color:var(--bg)}
+.badge-ghost{background:rgba(255,255,255,0.07);color:var(--cinza2);border:1px solid rgba(255,255,255,0.08)}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+.hero{
+  padding:48px;
+  border-radius:24px;
+  background:
+    radial-gradient(600px 300px at 15% 0%,rgba(22,71,184,0.35),transparent),
+    radial-gradient(400px 250px at 90% 10%,rgba(124,255,0,0.12),transparent),
+    linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
+  border:1px solid var(--card-border);
+  position:relative;overflow:hidden;
+}
+.hero:after{
+  content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;
+  background:radial-gradient(circle,rgba(124,255,0,0.18),transparent 70%);
+  filter:blur(10px)
+}
+
+.timeline{position:relative;margin:24px 0;padding-left:28px;border-left:1px dashed rgba(255,255,255,0.12)}
+.t-item{position:relative;margin-bottom:26px}
+.t-item:before{
+  content:'';position:absolute;left:-34px;top:6px;width:10px;height:10px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--verde-neon);box-shadow:0 0 0 4px rgba(124,255,0,0.15)
+}
+.t-item.done:before{background:var(--verde-neon)}
+.t-content{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:18px}
+
+/* Accordion */
+.accordion{
+  width:100%;text-align:left;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  color:var(--branco);padding:16px 18px;border-radius:12px;
+  font-weight:700;font-size:14px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  transition:all .25s;margin-bottom:8px
+}
+.accordion:hover{background:rgba(255,255,255,0.05);border-color:rgba(124,255,0,0.25)}
+.accordion.active{background:rgba(22,71,184,0.18);border-color:rgba(25,214,163,0.3)}
+.panel{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .25s ease;background:rgba(18,59,145,0.08);border-radius:0 0 12px 12px;margin:-8px 0 16px;border:1px solid transparent;border-top:none}
+.panel.show{max-height:800px;padding:18px;border-color:rgba(255,255,255,0.06)}
+
+.q-item{
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:14px;padding:16px 18px;margin-bottom:12px;
+  background:rgba(255,255,255,0.02);
+  cursor:pointer;transition:all .25s;
+}
+.q-item:hover{border-color:rgba(124,255,0,0.25)}
+.q-item .q{font-size:14px;font-weight:700;color:var(--branco)}
+.q-item .meta{margin-top:8px;display:none}
+.q-item.open .meta{display:block;animation:fadeUp .3s}
+.q-item .arrow{float:right;transition:transform .25s}
+.q-item.open .arrow{transform:rotate(90deg)}
+
+.btn{
+  background:linear-gradient(90deg,var(--azul-vibrante),var(--ciano));
+  color:var(--bg);border:none;padding:12px 20px;border-radius:999px;
+  font-weight:800;font-size:12px;letter-spacing:0.8px;text-transform:uppercase;
+  cursor:pointer;transition:transform .2s,box-shadow .2s;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(25,214,163,0.25)}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.14);color:var(--cinza)}
+
+.nav-buttons{display:flex;justify-content:space-between;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.06)}
+.menu-toggle{display:none;position:fixed;top:16px;right:16px;z-index:1000;background:var(--azul-vibrante);border:none;color:#fff;padding:10px 14px;border-radius:10px}
+
+.flow{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.flow-step{min-width:132px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px;text-align:center}
+.flow-step b{display:block;font-size:11px;color:var(--verde-neon);letter-spacing:0.8px;text-transform:uppercase}
+.flow-step span{font-size:11px;color:var(--cinza2)}
+
+.end-card{
+  margin-top:40px;padding:40px;border-radius:20px;
+  background:linear-gradient(180deg,rgba(124,255,0,0.10),rgba(25,214,163,0.06));
+  border:1px solid rgba(124,255,0,0.25);text-align:center;
+  position:relative;overflow:hidden;
+}
+.end-card .check{
+  width:56px;height:56px;border-radius:50%;background:var(--verde-neon);color:var(--bg);
+  display:grid;place-items:center;font-size:26px;margin:0 auto 14px;
+  box-shadow:0 0 0 10px rgba(124,255,0,0.12),0 0 30px rgba(124,255,0,0.25);
+  animation:pulse 2s infinite
+}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,255,0,0.4)}70%{box-shadow:0 0 0 18px rgba(124,255,0,0)}100%{box-shadow:0 0 0 0 rgba(124,255,0,0)}}
+
+@media(max-width:992px){
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main-content{margin-left:0;width:100%}
+  .inner{padding:28px 20px}
+  h1{font-size:32px}
+  .menu-toggle{display:block}
+}
+</style>
+</head>
+<body>
+<div id="progressBar"></div>
+<button class="menu-toggle" onclick="toggleMenu()">☰</button>
+
+<nav id="sidebar">
+  <div class="logo"><b>ÚNICO<span>CONTATO</span></b><small>Estudo de caso</small></div>
+  <div class="progress-dots" id="dots"><span></span><span></span><span></span><span></span><span></span></div>
+  <ul class="nav-menu">
+    <li><a class="nav-link active" onclick="showSection('intro')"><span class="num">1</span> Contexto inicial</a></li>
+    <li><a class="nav-link" onclick="showSection('case')"><span class="num">2</span> Como a conversa evoluiu</a></li>
+    <li><a class="nav-link" onclick="showSection('spin')"><span class="num">3</span> O que a conversa revelou</a></li>
+    <li><a class="nav-link" onclick="showSection('processo')"><span class="num">4</span> Próximos passos claros</a></li>
+    <li><a class="nav-link" onclick="showSection('perguntas')"><span class="num">5</span> Perguntas que ajudaram</a></li>
+  </ul>
+  <div style="margin-top:28px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
+    <div style="font-size:11px;color:var(--cinza2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Princípio</div>
+    <div style="font-size:13px;line-height:1.4">Não vender antes de entender.<br><span style="color:var(--cinza2)">Primeiro o contexto, depois a solução.</span></div>
+  </div>
+</nav>
+
+<main id="main-content">
+
+<!-- 1 INTRO -->
+<section id="intro" class="section-content active">
+<div class="inner">
+  <div class="reveal in">
+    <span class="badge badge-lime">28 a 31 • Jul • 2026</span>
+    <h1>Estudo de Caso:<br><i>Rosa Farma</i></h1>
+    <p class="lead">A cliente chegou porque o WhatsApp Business havia sido bloqueado. A partir desse ponto, a conversa precisou entender como a operação funcionava antes de falar de qualquer solução.</p>
+  </div>
+
+  <div class="hero reveal" style="margin-top:24px">
+    <h3 style="margin-top:0">O ponto de partida</h3>
+    <p>Indicação de outra farmácia. Contato inbound. No primeiro contato, a informação era simples: número principal bloqueado, segundo número já com limitações. Nada de "desespero" — era uma operação que dependia de um único canal e parou de conseguir usar.</p>
+    <div class="grid-3" style="margin-top:18px">
+      <div class="card soft"><span class="badge badge-ghost">Operação</span><p style="margin-top:8px"><strong>10 pessoas no total, 2 focadas no WhatsApp</strong><br><span style="color:var(--cinza2)">Turnos 8h-18h e 18h-22h, dividindo 1 tablet para fotos</span></p></div>
+      <div class="card soft"><span class="badge badge-ghost">Base</span><p style="margin-top:8px"><strong>5.500 contatos</strong><br><span style="color:var(--cinza2)">Número antigo de 15 anos, chip cancelado mas conta ainda no tablet</span></p></div>
+      <div class="card soft"><span class="badge badge-ghost">Volume</span><p style="margin-top:8px"><strong>130 a 150 entregas/dia via WhatsApp</strong><br><span style="color:var(--cinza2)">Queda relevante relatada após bloqueios</span></p></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+      <span class="badge badge-ghost">Sistema: Help Farma (comandas)</span>
+      <span class="badge badge-ghost">Instagram novo • rebranding</span>
+      <span class="badge badge-ghost">Profissional de marketing recém-contratada</span>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:18px">
+    <div class="card reveal">
+      <h3>Não vender antes de entender</h3>
+      <p>Esse foi o raciocínio que guiou a venda. Em vez de explicar a plataforma logo, a conversa ficou em entender: como atendem, onde salvam os contatos, como fazem envios ativos, quem decide.</p>
+      <div class="flow">
+        <div class="flow-step"><b>O que acontece?</b><span>situação</span></div>
+        <div class="flow-step"><b>O que quebra?</b><span>problema</span></div>
+        <div class="flow-step"><b>Por que importa?</b><span>implicação</span></div>
+        <div class="flow-step"><b>O que seria diferente?</b><span>necessidade</span></div>
+        <div class="flow-step"><b>Só então</b><span>solução</span></div>
+      </div>
+    </div>
+    <div class="card reveal soft">
+      <h3>O que realmente criou proximidade</h3>
+      <p>No início, teve uma pergunta simples sobre o número do suporte e uma olhada rápida na situação. Não foi resolução técnica. Foi só: <em>"Estou aqui com você. Vamos entender isso juntos."</em> Isso deixou a cliente mais confortável para continuar.</p>
+      <p style="font-size:12px;color:var(--cinza2);margin-top:10px">Aprendizado: proximidade vem de acompanhar, não de transformar um gesto simples em grande técnica.</p>
+    </div>
+  </div>
+
+  <div class="nav-buttons"><span></span><button class="btn" onclick="showSection('case')">Como a conversa evoluiu →</button></div>
+</div>
+</section>
+
+<!-- 2 CASE -->
+<section id="case" class="section-content">
+<div class="inner">
+  <h2>Parte 2 — Como a conversa evoluiu</h2>
+  <h1 style="font-size:34px">Do bloqueio à construção da solução</h1>
+  <p class="lead">A linha do tempo real, sem romantizar. O valor está em ver como cada resposta puxou a próxima pergunta.</p>
+
+  <div class="timeline">
+    <div class="t-item reveal">
+      <div class="t-content">
+        <span class="badge badge-lime">28/07 • Ligação</span>
+        <h3 style="margin-top:10px">Investigação leve, sem pitch</h3>
+        <p>A pergunta aqui foi: como vocês atendem hoje? A resposta trouxe o tablet compartilhado, os turnos, o Help Farma onde ficavam os números das comandas, e o uso de lista de transmissão com 200-300 pessoas por vez.</p>
+        <p>Outro ponto que apareceu: envio de foto de medicamento com tarja e de receita. Na prática, isso é um dos gatilhos que o robô da Meta pode sinalizar. Não foi apresentado como culpa, foi trazido como contexto para entender o bloqueio.</p>
+        <div class="card soft" style="margin-top:12px;padding:14px"><p style="font-size:12.5px">💬 Perguntas que puxaram a conversa: <br>"Vocês atendem só no tablet ou também no computador?" → descobriu gargalo físico<br>"Onde ficam salvos os contatos?" → abriu caminho para falar de exportação<br>"Como vocês fazem os envios ativos hoje?" → entendeu lista de transmissão</p></div>
+      </div>
+    </div>
+
+    <div class="t-item reveal">
+      <div class="t-content">
+        <span class="badge badge-ghost">28/07 • Noite</span>
+        <h3>Confirmação da reunião</h3>
+        <p>Follow-up curto, 30 min antes, para garantir que a reunião do dia seguinte aconteceria. Em casos onde o cliente vem com um problema ativo, manter o momentum ajuda mais que um discurso longo.</p>
+      </div>
+    </div>
+
+    <div class="t-item reveal">
+      <div class="t-content">
+        <span class="badge badge-lime">29/07 • Reunião 1h15 • Rosa + Enéas</span>
+        <h3>Retomada do que foi ouvido + contraste</h3>
+        <p>A apresentação não começou do zero. Os primeiros slides eram o resumo do que a Rosa já tinha dito: WhatsApp restrito, impacto nas vendas, base impossibilitada de crescer, gargalo do tablet, falta de visibilidade e chegada do marketing.</p>
+        <p>Aí a conversa precisou avançar para: <em>me fala se entendi errado e se tem algo a mais?</em> Quando ela confirmou e complementou, o diagnóstico virou co-construção.</p>
+        <div class="grid-2" style="margin-top:12px">
+          <div class="card soft" style="padding:14px"><strong>Hoje vs Amanhã</strong><p style="font-size:12.5px;margin-top:6px">Hoje: instável, sem métricas, atendimento manual no tablet, sem ação de relacionamento.<br>Amanhã: operação via API Oficial, campanhas seguras, dashboards, múltiplos atendentes no PC, recorrência.</p></div>
+          <div class="card soft" style="padding:14px"><strong>Por que funcionou</strong><p style="font-size:12.5px;margin-top:6px">Cada item do "Amanhã" respondia a uma dor específica que ela já tinha verbalizado, não a uma feature genérica.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="t-item reveal">
+      <div class="t-content">
+        <span class="badge badge-ghost">29/07 • Apresentação</span>
+        <h3>API Oficial explicada sem jargão</h3>
+        <p>Em vez de falar de portfólio e verificação logo, a explicação foi: o WhatsApp precisa reconhecer a farmácia como empresa para liberar um canal feito para volume. Só depois entrou o como fazer (Facebook Business, aprovação do número).</p>
+        <p>Também apareceu a parte de coexistência: dá para usar plataforma e aplicativo ao mesmo tempo em alguns cenários. A recomendação foi avaliar o melhor caminho, não impor transição total.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-buttons"><button class="btn-ghost btn" onclick="showSection('intro')">← Voltar</button><button class="btn" onclick="showSection('spin')">O que a conversa revelou →</button></div>
+</div>
+</section>
+
+<!-- 3 SPIN -->
+<section id="spin" class="section-content">
+<div class="inner">
+  <h2>Parte 3 — O que a conversa revelou</h2>
+  <h1 style="font-size:34px">Sem forçar técnica onde não houve</h1>
+  <p class="lead">SPIN apareceu como lógica de perguntas, não como rótulo. Em alguns momentos houve afirmação onde caberia pergunta — e tudo bem, faz parte de venda real.</p>
+
+  <div class="grid-2">
+    <div class="card reveal">
+      <span class="badge badge-ghost">Situação</span>
+      <h3>O que estava acontecendo</h3>
+      <p>Perguntas para mapear pessoas, processo, tecnologia e canal. Exemplos reais do caso:</p>
+      <ul style="padding-left:16px;font-size:13px;color:var(--cinza)"><li>Quantos atendentes ficam no WhatsApp e em quais horários?</li><li>Vocês atendem só no tablet ou também no computador?</li><li>Qual sistema usam para comandas? Onde os números ficam salvos?</li><li>Quantos pedidos por dia vêm só do WhatsApp?</li></ul>
+      <p style="font-size:12px;color:var(--cinza2);margin-top:10px">O que ficou faltando: ticket médio, margem, custo da queda em R$ e quem além da Rosa decide — o Enéas só apareceu na reunião.</p>
+    </div>
+    <div class="card reveal">
+      <span class="badge badge-ghost">Problema</span>
+      <h3>O que estava quebrando</h3>
+      <p>Problemas verbalizados pela cliente, não presumidos:</p>
+      <ul style="padding-left:16px;font-size:13px;color:var(--cinza)"><li>Número principal bloqueado, segundo também limitado</li><li>Impossibilidade de adicionar contatos e fazer transmissão</li><li>Dois atendentes compartilhando um único aparelho</li><li>Sem relatório, só contando manualmente nas comandas</li></ul>
+      <p style="font-size:12px;color:var(--cinza2);margin-top:10px">Boa prática aqui foi não interromper a história dos 15 anos do número. Deixar contar cria contexto.</p>
+    </div>
+    <div class="card reveal">
+      <span class="badge badge-lime">Implicação</span>
+      <h3>Por que isso importa</h3>
+      <p>No caso, a implicação foi mais afirmada nos slides do que perguntada. Em venda real, acontece.</p>
+      <p style="font-size:13px">No slide: risco de novas restrições por depender de aparelho físico, perda de base de 15 anos, nova demanda de marketing sem estrutura.</p>
+      <p style="font-size:13px;margin-top:8px"><strong>Como poderia ser pergunta:</strong> "Se esse segundo número cair também, como ficam as entregas de amanhã?" / "Esse percentual de queda representa quanto em R$ por semana?" / "Quando o cliente não consegue falar, para onde ele vai?"</p>
+      <p style="font-size:12px;color:var(--cinza2);margin-top:10px">Raciocínio: não transformar envio em massa em regra automática de "vai ser banido". Perguntar como o envio é feito hoje e se já teve bloqueio.</p>
+    </div>
+    <div class="card reveal">
+      <span class="badge badge-lime">Need-Payoff</span>
+      <h3>O que seria diferente</h3>
+      <p>Momentos onde a cliente visualizou valor:</p>
+      <p style="font-size:13px">"Será que dá para puxar esse pessoal salvo das entregas para a plataforma?" — ela mesma pediu a solução de recuperação de base.</p>
+      <p style="font-size:13px;margin-top:8px">"Queria mesmo era a rede antiga" — necessidade de estabilidade e credibilidade, que conectou com conta verificada.</p>
+      <p style="font-size:12px;color:var(--cinza2);margin-top:10px">Aprendizado: apresentar feature colada na dor. Ex: "Você me disse que conta no tablet, então na plataforma cada um tem acesso no computador, sem compartilhar."</p>
+    </div>
+  </div>
+
+  <div class="card reveal soft" style="margin-top:16px">
+    <h3>Outras coisas que apareceram e que não são SPIN</h3>
+    <div class="grid-3">
+      <div><strong style="font-size:12px;color:var(--verde-neon)">Redução de risco</strong><p style="font-size:12.5px">Explicar coexistência, implantação com consultor, treinamento de até 5 pessoas, lives diárias. Mostra flexibilidade, não imposição.</p></div>
+      <div><strong style="font-size:12px;color:var(--verde-neon)">Contraste</strong><p style="font-size:12.5px">Tabela Hoje vs Amanhã usando palavras dela. Visual simples que facilita decisão.</p></div>
+      <div><strong style="font-size:12px;color:var(--verde-neon)">Próxima alavanca</strong><p style="font-size:12.5px">Campanhas para reativar base, lembretes de uso contínuo, centralizar Instagram novo + IA. Já abre expansão sem vender tudo agora.</p></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons"><button class="btn-ghost btn" onclick="showSection('case')">← Anterior</button><button class="btn" onclick="showSection('processo')">Próximos passos claros →</button></div>
+</div>
+</section>
+
+<!-- 4 PROCESSO -->
+<section id="processo" class="section-content">
+<div class="inner">
+  <h2>Parte 4 — Da conversa para os próximos passos</h2>
+  <h1 style="font-size:34px">Venda não termina no "sim"</h1>
+  <p class="lead">O ponto mais importante do fechamento aqui não foi velocidade. Foi clareza do que aconteceria depois.</p>
+
+  <div class="grid-2">
+    <div class="card reveal">
+      <h3>O que ficou definido na reunião</h3>
+      <p><span class="badge badge-lime">29/07</span> Apresentação com validação do cenário atual. Slide "Faz sentido?" funcionou como pedido de confirmação, não como fechamento agressivo.</p>
+      <p style="font-size:13px"><strong>Incluso apresentado:</strong> Implantação, API Oficial, usuários simultâneos, filas ilimitadas, canais (WhatsApp, Instagram, Facebook, site, Telegram), visão de agentes, relatórios, lives, suporte.</p>
+      <p style="font-size:13px"><strong>Investimento:</strong> Setup R$ 3.100 (estruturação, tramitação API, treinamento 5 pessoas) + R$ 495/mês. Sem fidelidade longa, com aviso de 30 dias — redução de atrito.</p>
+      <p style="font-size:12px;color:var(--cinza2);margin-top:10px">Observação honesta: não houve objeção registrada em transcrição. Provável que construção de valor anterior tenha neutralizado preço. Em casos sem urgência tão clara, objeção de preço aparece — e precisa ser tratada como critério, não com desconto imediato.</p>
+    </div>
+    <div class="card reveal">
+      <h3>O que precisava acontecer depois</h3>
+      <div class="t-content" style="background:rgba(255,255,255,0.02);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.06)">
+        <p style="font-size:13px"><strong>1. Formalização</strong><br>Contrato + definição de data de setup + mapeamento inicial</p>
+        <p style="font-size:13px;margin-top:10px"><strong>2. Quem faz o quê</strong><br>Cliente: enviar fotos da loja + texto institucional "Sobre nós" + acesso ao Help Farma para exportar base<br>Único: tramitação verificação Portfólio no Facebook Business, conexão API, setup filas/automações</p>
+        <p style="font-size:13px;margin-top:10px"><strong>3. Próximo contato</strong><br>30/07: envio do boleto + alinhamento de site/portfólio<br>31/07: materiais já com equipe de migração</p>
+        <p style="font-size:13px;margin-top:10px"><strong>4. Como seguiria</strong><br>Implantação → Treinamento → Acompanhamento CS para estabilizar e depois abrir campanhas de reativação</p>
+      </div>
+      <p style="font-size:12px;color:var(--ciano);margin-top:12px">→ Aprendizado replicável: sempre sair da reunião com o que ficou definido, quem faz, quando é o próximo contato e como a implantação segue. Isso reduz sumiço pós-sim.</p>
+    </div>
+  </div>
+
+  <div class="card reveal" style="margin-top:16px">
+    <h3>Plano de recuperação em 4 etapas (usado nos slides)</h3>
+    <div class="grid-3">
+      <div><span class="badge badge-ghost">1. Verificação</span><p style="font-size:13px;margin-top:6px">Tramitação no Facebook Business Manager e aprovação do número na API Oficial.</p></div>
+      <div><span class="badge badge-ghost">2. Implantação</span><p style="font-size:13px;margin-top:6px">Setup plataforma, rotas, URAs, organização tecnológica.</p></div>
+      <div><span class="badge badge-ghost">3. Treinamento</span><p style="font-size:13px;margin-top:6px">Capacitação prática dos atendentes e gestão para transição.</p></div>
+      <div><span class="badge badge-ghost">4. Evolução</span><p style="font-size:13px;margin-top:6px">Operação estável pronta para campanhas, pós-venda e IA.</p></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons"><button class="btn-ghost btn" onclick="showSection('spin')">← Anterior</button><button class="btn" onclick="showSection('perguntas')">Perguntas que ajudaram →</button></div>
+</div>
+</section>
+
+<!-- 5 PERGUNTAS -->
+<section id="perguntas" class="section-content">
+<div class="inner">
+  <h2>Parte 5 — Perguntas que ajudaram</h2>
+  <h1 style="font-size:34px">Pergunta → o que descobrir → por que importa</h1>
+  <p class="lead">Não é roteiro. É raciocínio. A resposta determina a próxima pergunta. Escolha 2-3 por conversa.</p>
+
+  <button class="accordion">Contexto da operação — entender o cenário antes de falar de problema <span>＋</span></button>
+  <div class="panel">
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Como funciona hoje o atendimento no WhatsApp? Quem cuida e em qual horário?</div><div class="meta"><p><strong>O que estou tentando descobrir:</strong> pessoas, turnos, cobertura (no caso 8h-22h).<br><strong>Por que importa:</strong> dimensiona gargalo e necessidade de múltiplos acessos.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Vocês atendem só no tablet/celular ou também no computador?</div><div class="meta"><p><strong>O que descobrir:</strong> dependência de aparelho físico.<br><strong>Por que importa:</strong> explica lentidão e risco — 2 pessoas dividindo 1 aparelho.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Onde ficam salvos os contatos dos clientes hoje?</div><div class="meta"><p><strong>O que descobrir:</strong> chip, Google, Apple, sistema Help Farma.<br><strong>Por que importa:</strong> define se dá para exportar e reativar base de 5.500.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Qual sistema vocês usam para comandas e estoque?</div><div class="meta"><p><strong>O que descobrir:</strong> ERP legado e possibilidade de planilha.<br><strong>Por que importa:</strong> evita prometer recuperação impossível.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Quantos pedidos por dia vêm só do WhatsApp?</div><div class="meta"><p><strong>O que descobrir:</strong> volume real (130-150/dia no caso).<br><strong>Por que importa:</strong> justifica API vs app amador.</p></div></div>
+  </div>
+
+  <button class="accordion">Envios ativos — entender como fazem, sem presumir risco <span>＋</span></button>
+  <div class="panel">
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Como vocês fazem hoje os envios ativos? Promoções, listas?</div><div class="meta"><p><strong>O que descobrir:</strong> processo atual (lista de transmissão manual 200-300).<br><strong>Por que importa:</strong> só depois de entender o processo dá para falar de risco.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Já tiveram algum problema com bloqueio ou restrição nesses envios?</div><div class="meta"><p><strong>O que descobrir:</strong> histórico de dor real, não presumida.<br><strong>Por que importa:</strong> se houve, abre implicação; se não houve mas usa API oficial, diagnóstico é outro.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Quantas pessoas utilizam esse canal para disparo?</div><div class="meta"><p><strong>O que descobrir:</strong> dimensão operacional e controle.<br><strong>Por que importa:</strong> ajuda a falar de rastreabilidade e auditoria.</p></div></div>
+  </div>
+
+  <button class="accordion">Problemas e implicações — quantificar com o cliente <span>＋</span></button>
+  <div class="panel">
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Além do bloqueio, o que mais te incomoda na operação hoje?</div><div class="meta"><p><strong>O que descobrir:</strong> dores latentes além da técnica.<br><strong>Por que importa:</strong> amplia de 1 problema para 3-4 (falta de métricas, lentidão, etc).</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Hoje, se eu te perguntar quantas vendas vieram só do WhatsApp ontem, como você puxa esse número?</div><div class="meta"><p><strong>O que descobrir:</strong> falta de visibilidade.<br><strong>Por que importa:</strong> conecta com dashboard e gestão em tempo real.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Esse percentual de queda que você mencionou representa quanto em faturamento por semana? Há quanto tempo?</div><div class="meta"><p><strong>O que descobrir:</strong> impacto financeiro.<br><strong>Por que importa:</strong> transforma % em R$, cria urgência real.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Se esse segundo número cair também, como ficam as entregas de amanhã?</div><div class="meta"><p><strong>O que descobrir:</strong> risco iminente.<br><strong>Por que importa:</strong> faz cliente calcular consequência de não resolver.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Vocês mandam foto de remédio com tarja ou receita? Sabia que o robô da Meta pode sinalizar?</div><div class="meta"><p><strong>O que descobrir:</strong> causa desconhecida do ban.<br><strong>Por que importa:</strong> educa sem culpar, aumenta custo de manter status quo.</p></div></div>
+  </div>
+
+  <button class="accordion">Necessidade e próximos passos — deixar cliente descrever o desejado <span>＋</span></button>
+  <div class="panel">
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Se você pudesse reativar esses contatos de forma segura e oficial, o que isso representaria?</div><div class="meta"><p><strong>O que descobrir:</strong> payoff da base.<br><strong>Por que importa:</strong> cliente verbaliza valor, não você.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Como seria a operação ideal daqui 3 meses?</div><div class="meta"><p><strong>O que descobrir:</strong> visão de futuro.<br><strong>Por que importa:</strong> guia apresentação Hoje vs Amanhã.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">Quem além de você precisa avaliar isso antes de avançarmos? Como funciona a decisão aí?</div><div class="meta"><p><strong>O que descobrir:</strong> autoridade e processo (Enéas apareceu só na reunião).<br><strong>Por que importa:</strong> evita voltar do zero.</p></div></div>
+    <div class="q-item" onclick="this.classList.toggle('open')"><span class="arrow">›</span><div class="q">O que precisa acontecer para você dizer que valeu a pena?</div><div class="meta"><p><strong>O que descobrir:</strong> critério de sucesso.<br><strong>Por que importa:</strong> alinha expectativa e reduz churn.</p></div></div>
+  </div>
+
+  <div class="card reveal" style="margin-top:20px;background:rgba(124,255,0,0.06);border-color:rgba(124,255,0,0.22)">
+    <h3>Como escolher a próxima pergunta</h3>
+    <p style="font-size:13px"><strong>Se responde com dado operacional</strong> ("2 atendentes no tablet") → aprofunde problema: "E quando um sai e outro entra, como fica o histórico?"<br>
+    <strong>Se responde com resultado</strong> ("venda caiu") → vá para implicação: "Isso representa quanto em R$?"<br>
+    <strong>Se responde com desejo</strong> ("queria puxar antigos") → vá para payoff: "Se conseguisse, o que mudaria?"<br>
+    <strong>Se responde evasivo</strong> ("tá tudo bem") → volte para situação específica: "Me conta um dia típico, quantas mensagens chegam?"</p>
+  </div>
+
+  <div class="end-card reveal">
+    <div class="check">✓</div>
+    <h3 style="margin-top:0">Case concluído</h3>
+    <p style="max-width:560px;margin:8px auto 0">Você acompanhou como uma conversa sobre bloqueio no WhatsApp Business evoluiu para diagnóstico, aprofundamento, construção de solução e próximos passos claros. O raciocínio que fica: entenda o contexto, quantifique com o cliente e só então conecte a solução.</p>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" onclick="showSection('intro')">Voltar ao início</button>
+      <button class="btn-ghost btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">Topo ↑</button>
+    </div>
+    <div style="margin-top:16px;font-size:11px;color:var(--cinza2);letter-spacing:1px;text-transform:uppercase">Baseado em arquivos reais • 28-31/07/2026 • Rosa Farma • Único Contato</div>
+  </div>
+
+</div>
+</section>
+
+</main>
+
+<script>
+// Navegação
+function showSection(id){
+  document.querySelectorAll('.section-content').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  const link = [...document.querySelectorAll('.nav-link')].find(l=>l.getAttribute('onclick').includes(id));
+  if(link) link.classList.add('active');
+  // dots
+  const order=['intro','case','spin','processo','perguntas'];
+  const idx=order.indexOf(id);
+  document.querySelectorAll('#dots span').forEach((d,i)=>d.classList.toggle('on',i<=idx));
+  document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
+  // reveal reset
+  setTimeout(observeReveals,100);
+}
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('open')}
+
+// Accordion
+document.querySelectorAll('.accordion').forEach(acc=>{
+  acc.addEventListener('click',function(){
+    this.classList.toggle('active');
+    const panel=this.nextElementSibling;
+    if(panel.style.maxHeight){panel.style.maxHeight=null;panel.classList.remove('show')}
+    else{panel.style.maxHeight=panel.scrollHeight+'px';panel.classList.add('show')}
+  });
+});
+
+// Progress bar
+window.addEventListener('scroll',()=>{
+  const scrolled=(window.scrollY/(document.documentElement.scrollHeight-window.innerHeight))*100;
+  document.getElementById('progressBar').style.width=scrolled+'%';
+});
+
+// Reveal on scroll
+function observeReveals(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')});
+  },{threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(r=>obs.observe(r));
+}
+observeReveals();
+
+// Microinterações nos cards
+document.querySelectorAll('.card').forEach(c=>{
+  c.addEventListener('mousemove',e=>{
+    const rect=c.getBoundingClientRect();
+    const x=e.clientX-rect.left; const y=e.clientY-rect.top;
+    c.style.background=`radial-gradient(300px at ${x}px ${y}px, rgba(124,255,0,0.08), rgba(255,255,255,0.02))`;
+  });
+  c.addEventListener('mouseleave',()=>{c.style.background='';});
+});
+</script>
+</body>
+</html>
